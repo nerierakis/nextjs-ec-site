@@ -64,9 +64,18 @@ export default async function AdminProductsPage({
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-center">商品一覧</h1>
       <div className="flex justify-end mb-4">
-        <Link href="/admin/products/register" className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-sm font-semibold">
-          商品登録
-        </Link>
+      <Link
+        href="/admin/products/register"
+        className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-sm font-semibold"
+      >
+        商品登録
+      </Link>
+      <Link
+      href="/admin/inquiries"
+        className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-sm font-semibold"
+      >
+        お問い合わせ一覧
+      </Link>
       </div>
 
       <div className="shadow-lg rounded-lg overflow-hidden">

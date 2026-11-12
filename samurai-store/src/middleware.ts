@@ -17,6 +17,7 @@ const authPages = [
 const adminPages = [
   '/admin/products', // 管理者用の商品一覧ページ
   '/admin/products/register', // 管理者用の商品登録ページ
+  '/admin/inquiries',
 ];
 
 // リクエスト受信時に実行されるミドルウェア
@@ -60,3 +61,4 @@ function redirectToLogin(request: NextRequest) {
   loginUrl.searchParams.set('redirect', request.nextUrl.pathname + request.nextUrl.search);
   return NextResponse.redirect(loginUrl);
 }
+
