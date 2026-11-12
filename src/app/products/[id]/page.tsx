@@ -4,7 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { type ProductData } from '@/types/product';
 import { type ReviewsResponse } from '@/types/review';
-import { isLoggedIn } from '@/lib/auth';
+import { isLoggedIn, AUTH_TOKEN } from '@/lib/auth';
+import { cookies } from 'next/headers';
+import FavoriteControls from './FavoriteControls';
 import CartControls from '@/app/products/[id]/CartControls';
 import ReviewControls from '@/app/products/[id]/ReviewControls';
 
@@ -48,6 +50,36 @@ async function getReviews(id: string): Promise<ReviewsResponse | []> {
   return await res.json(); 
 }
 
+// 商品のお気に入り状態を取得する
+async function getIsFavorite(id: string): Promise<boolean> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(AUTH_TOKEN)?.value;
+
+  // 未ログインの場合は未登録として扱う
+  if (!token) return false;
+
+  const res = await fetch(
+    `${process.env.BASE_URL}/api/favorites/${id}`,
+    {
+      cache: 'no-store',
+      headers: {
+        Cookie: `${AUTH_TOKEN}=${token}`,
+      },
+    }
+  );
+
+  // ログインの有効期限が切れている場合
+  if (res.status === 401) return false;
+
+  if (!res.ok) {
+    throw new Error('お気に入り状態を取得できませんでした。');
+  }
+
+  const isFavorite: boolean = await res.json();
+  return isFavorite;
+}
+
+
 // レビューの星表示を決定
 function displayStars(avgRating: number) {
   const rating = Math.round(avgRating); // 四捨五入
@@ -61,11 +93,12 @@ export default async function ProductDetailPage(props: ProductDetailPageProps) {
   const resolvedParams = await props.params; // 非同期で取得されるためawaitが必要
   const productId = resolvedParams.id; // URLパラメータから商品IDを取得
 
-  // 商品データとレビューデータを並行して取得
-  const [product, reviewsResponse] = await Promise.all([
-    getProduct(productId),
-    getReviews(productId),
-  ]);
+// 商品・レビュー・お気に入り状態を並行して取得
+const [product, reviewsResponse, isFavorite] = await Promise.all([
+  getProduct(productId),
+  getReviews(productId),
+  getIsFavorite(productId),
+]);
 
   // 商品が見つからない場合は404ページを表示
   if (!product) {
@@ -138,7 +171,22 @@ export default async function ProductDetailPage(props: ProductDetailPageProps) {
                 stock={stock}
                 loggedIn={loggedIn}
               />
-          )}
+            )}
+            <div>
+              {loggedIn ? (
+                <FavoriteControls
+                  productId={product.id}
+                  initialIsFavorite={isFavorite}
+                />
+              ) : (
+                <Link
+                  href="/login"
+                  className="text-pink-600 hover:underline"
+                >
+                  ログインしてお気に入りに追加
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>
